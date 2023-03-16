@@ -75,7 +75,9 @@ namespace QuantLib {
                           Real requiredTolerance,
                           Size maxSamples,
                           bool isBiased,
-                          BigNatural seed);
+                          BigNatural seed,
+                          bool withConstantParameters);
+                                  
         void calculate() const override {
             Real spot = process_->x0();
             QL_REQUIRE(spot > 0.0, "negative or null underlying given");
@@ -92,14 +94,64 @@ namespace QuantLib {
       protected:
         // McSimulation implementation
         TimeGrid timeGrid() const override;
-        ext::shared_ptr<path_generator_type> pathGenerator() const override {
-            TimeGrid grid = timeGrid();
-            typename RNG::rsg_type gen =
-                RNG::make_sequence_generator(grid.size()-1,seed_);
-            return ext::shared_ptr<path_generator_type>(
-                         new path_generator_type(process_,
-                                                 grid, gen, brownianBridge_));
-        }
+                                  
+                                  ext::shared_ptr<path_generator_type> pathGenerator() const override {
+                                              TimeGrid grid = timeGrid();
+                                              typename RNG::rsg_type gen =
+                                                  RNG::make_sequence_generator(grid.size()-1,seed_);
+
+
+
+                                   if (this->withConstantParameters)
+                                              {
+
+                                                   Size dimensions = McSimulation<SingleVariate, RNG, S>::process_->factors();
+                                              TimeGrid grid = this->timeGrid();
+                                              typename RNG::rsg_type generator =
+                                                  RNG::make_sequence_generator(dimensions * (grid.size() - 1), McSimulation<SingleVariate, RNG, S>::seed_);
+                                              
+                                                  ext::shared_ptr<GeneralizedBlackScholesProcess> BS_process =
+                                                      ext::dynamic_pointer_cast<GeneralizedBlackScholesProcess>(this->process_);
+
+                                                  // Get the parameters from the generalizedBSProcess class
+                                                  Time time_of_extraction = grid.back();
+                                                  double strike = ext::dynamic_pointer_cast<StrikedTypePayoff>(McSimulation<SingleVariate, RNG, S>::arguments_.payoff)->strike();
+                                                  double riskFreeRate_ = BS_process->riskFreeRate()->zeroRate(time_of_extraction, Continuous);
+                                                  double dividend_ = BS_process->dividendYield()->zeroRate(time_of_extraction, Continuous);
+                                                  double volatility_ = BS_process->blackVolatility()->blackVol(time_of_extraction, strike);
+                                                  double underlyingValue_ = BS_process->x0();
+                                                  // Instanciate a constantBSProcess with the extracted parameters
+                                                  ext::shared_ptr<ConstantBlackScholesProcess> Cst_BS_process(new ConstantBlackScholesProcess(underlyingValue_, riskFreeRate_, volatility_, dividend_));
+                                                  // Return a new path generator with constantBSProcess
+                                                  return ext::shared_ptr<path_generator_type>(
+                                                      new path_generator_type(Cst_BS_process, grid,
+                                                          generator, McSimulation<SingleVariate, RNG, S>::brownianBridge_));
+                                              }
+                                              else {
+
+                                                   return ext::shared_ptr<path_generator_type>(
+                                                           new path_generator_type(process_,
+                                                                                   grid, gen, brownianBridge_));
+
+
+
+                                              }
+
+
+
+
+                                             
+
+
+                                          }
+        //ext::shared_ptr<path_generator_type> pathGenerator() const override {
+        //    TimeGrid grid = timeGrid();
+        //    typename RNG::rsg_type gen =
+        //        RNG::make_sequence_generator(grid.size()-1,seed_);
+        //    return ext::shared_ptr<path_generator_type>(
+        //                 new path_generator_type(process_,
+        //                                         grid, gen, brownianBridge_));
+       // }
         ext::shared_ptr<path_pricer_type> pathPricer() const override;
         // data members
         ext::shared_ptr<GeneralizedBlackScholesProcess> process_;
@@ -109,6 +161,7 @@ namespace QuantLib {
         bool isBiased_;
         bool brownianBridge_;
         BigNatural seed_;
+        bool withConstantParameters_;
     };
 
 
@@ -127,7 +180,7 @@ namespace QuantLib {
         MakeMCBarrierEngine_2& withMaxSamples(Size samples);
         MakeMCBarrierEngine_2& withBias(bool b = true);
         MakeMCBarrierEngine_2& withSeed(BigNatural seed);
-        MakeMCBarrierEngine_2& withConstantParameters(bool b = true);
+        MakeMCBarrierEngine_2& withConstantParameters(bool withConstantParameters);
         // conversion to pricing engine
         operator ext::shared_ptr<PricingEngine>() const;
       private:
@@ -136,6 +189,7 @@ namespace QuantLib {
         Size steps_, stepsPerYear_, samples_, maxSamples_;
         Real tolerance_;
         BigNatural seed_ = 0;
+        bool withConstantParameters_;
     };
 
 
@@ -152,11 +206,12 @@ namespace QuantLib {
         Real requiredTolerance,
         Size maxSamples,
         bool isBiased,
-        BigNatural seed)
+        BigNatural seed,
+        bool withConstantParameters                                            )
     : McSimulation<SingleVariate, RNG, S>(antitheticVariate, false), process_(std::move(process)),
       timeSteps_(timeSteps), timeStepsPerYear_(timeStepsPerYear), requiredSamples_(requiredSamples),
       maxSamples_(maxSamples), requiredTolerance_(requiredTolerance), isBiased_(isBiased),
-      brownianBridge_(brownianBridge), seed_(seed) {
+brownianBridge_(brownianBridge), seed_(seed), withConstantParameters_(false) {
         QL_REQUIRE(timeSteps != Null<Size>() ||
                    timeStepsPerYear != Null<Size>(),
                    "no time steps provided");
@@ -327,7 +382,8 @@ namespace QuantLib {
                                      samples_, tolerance_,
                                      maxSamples_,
                                      biased_,
-                                     seed_));
+                                     seed_,
+                                     withConstantParameters_));
     }
 
 }
