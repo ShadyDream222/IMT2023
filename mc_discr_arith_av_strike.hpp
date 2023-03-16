@@ -55,6 +55,62 @@ namespace QuantLib {
              Size maxSamples,
              BigNatural seed,
              bool withConstantParameters);
+            
+            
+        private:
+            bool withConstantParameters;
+
+            // The path generator
+            ext::shared_ptr<path_generator_type> pathGenerator() const override {
+
+                Size dimensions = MCDiscreteAveragingAsianEngineBase<SingleVariate,RNG,S>::process_->factors();
+                TimeGrid grid = this->timeGrid();
+                typename RNG::rsg_type generator =
+                    RNG::make_sequence_generator(dimensions * (grid.size() - 1), MCDiscreteAveragingAsianEngineBase<SingleVariate, RNG, S>::seed_);
+                //bool withConstantParameters=true;
+                if (this ->withConstantParameters)
+                {
+    //std::cout << "Black Scholes Process with constant parameters" << std::endl;
+                    ext::shared_ptr<GeneralizedBlackScholesProcess> BS_process =
+                        ext::dynamic_pointer_cast<GeneralizedBlackScholesProcess>(this->process_);
+                    // Get the parameters from the generalizedBSProcess class
+                    Time time_of_extraction = grid.back();
+                    double strike = ext::dynamic_pointer_cast<StrikedTypePayoff>(MCDiscreteAveragingAsianEngineBase<SingleVariate, RNG, S>::arguments_.payoff)->strike();
+                    
+                    double volatility_ = BS_process->blackVolatility()->blackVol(time_of_extraction, strike);
+                    
+                    double riskFreeRate_ = BS_process->riskFreeRate()->zeroRate(time_of_extraction, Continuous);
+                    
+                    double dividend_ = BS_process->dividendYield()->zeroRate(time_of_extraction, Continuous);
+                    
+                    double underlyingValue_ = BS_process->x0();
+                    
+                    // Instanciate a constantBSProcess with the extracted parameters
+                    ext::shared_ptr<ConstantBlackScholesProcess> Cst_BS_process(new ConstantBlackScholesProcess(underlyingValue_, riskFreeRate_, volatility_, dividend_));
+                    
+                    // Return a new path generator with constantBSProcess
+                    return ext::shared_ptr<path_generator_type>(
+                        new path_generator_type(Cst_BS_process, grid,
+                          generator, MCDiscreteAveragingAsianEngineBase<SingleVariate, RNG, S>::brownianBridge_));
+                    
+                }
+                else
+                { // return the classical path generator
+                   // std::cout << "Black Scholes Process runs as usual (parameters extracted from GeneralizedBSProcess)" << std::endl;
+
+                    return ext::shared_ptr<path_generator_type>(
+                        new path_generator_type(MCDiscreteAveragingAsianEngineBase<SingleVariate, RNG, S>::process_, grid,
+                            generator, MCDiscreteAveragingAsianEngineBase<SingleVariate, RNG, S>::brownianBridge_));
+                    
+                
+                }
+            }
+            
+            
+            
+            
+            
+            
       protected:
         ext::shared_ptr<path_pricer_type> pathPricer() const override;
     };
