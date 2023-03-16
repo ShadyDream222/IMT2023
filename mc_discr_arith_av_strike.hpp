@@ -67,9 +67,10 @@ namespace QuantLib {
                 TimeGrid grid = this->timeGrid();
                 typename RNG::rsg_type generator =
                     RNG::make_sequence_generator(dimensions * (grid.size() - 1), MCDiscreteAveragingAsianEngineBase<SingleVariate, RNG, S>::seed_);
-                //bool withConstantParameters=true;
-                if (this ->withConstantParameters)
+                
+                if (this->withConstantParameters)
                 {
+                    //std::cout << "test" << std::endl;
     //std::cout << "Black Scholes Process with constant parameters" << std::endl;
                     ext::shared_ptr<GeneralizedBlackScholesProcess> BS_process =
                         ext::dynamic_pointer_cast<GeneralizedBlackScholesProcess>(this->process_);
@@ -136,7 +137,7 @@ namespace QuantLib {
                                                               requiredSamples,
                                                               requiredTolerance,
                                                               maxSamples,
-                                                              seed) {withConstantParameters = withConstantParameters;}
+                                                              seed) {this->withConstantParameters = withConstantParameters;}
 
     template <class RNG, class S>
     inline
@@ -192,7 +193,7 @@ namespace QuantLib {
         Real tolerance_;
         bool brownianBridge_ = true;
         BigNatural seed_ = 0;
-        bool withConstantParameters_ = false;
+        bool withConstantParameters_ = true;
     };
 
     template <class RNG, class S>
@@ -254,6 +255,7 @@ namespace QuantLib {
     template <class RNG, class S>
     inline MakeMCDiscreteArithmeticASEngine_2<RNG,S>&
     MakeMCDiscreteArithmeticASEngine_2<RNG,S>::withConstantParameters(bool b) {
+         withConstantParameters_ = b;
         return *this;
     }
 

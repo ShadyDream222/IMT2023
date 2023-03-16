@@ -180,7 +180,7 @@ namespace QuantLib {
         MakeMCBarrierEngine_2& withMaxSamples(Size samples);
         MakeMCBarrierEngine_2& withBias(bool b = true);
         MakeMCBarrierEngine_2& withSeed(BigNatural seed);
-        MakeMCBarrierEngine_2& withConstantParameters(bool withConstantParameters);
+        MakeMCBarrierEngine_2& withConstantParameters(bool b = true);
         // conversion to pricing engine
         operator ext::shared_ptr<PricingEngine>() const;
       private:
@@ -207,11 +207,12 @@ namespace QuantLib {
         Size maxSamples,
         bool isBiased,
         BigNatural seed,
-        bool withConstantParameters                                            )
+        bool withConstantParameters                                           )
     : McSimulation<SingleVariate, RNG, S>(antitheticVariate, false), process_(std::move(process)),
       timeSteps_(timeSteps), timeStepsPerYear_(timeStepsPerYear), requiredSamples_(requiredSamples),
       maxSamples_(maxSamples), requiredTolerance_(requiredTolerance), isBiased_(isBiased),
-brownianBridge_(brownianBridge), seed_(seed), withConstantParameters_(false) {
+brownianBridge_(brownianBridge), seed_(seed) {  this->withConstantParameters = withConstantParameters;
+   // withConstantParameters_(false)
         QL_REQUIRE(timeSteps != Null<Size>() ||
                    timeStepsPerYear != Null<Size>(),
                    "no time steps provided");
@@ -362,7 +363,7 @@ brownianBridge_(brownianBridge), seed_(seed), withConstantParameters_(false) {
 
     template <class RNG, class S>
     inline MakeMCBarrierEngine_2<RNG,S>&
-    MakeMCBarrierEngine_2<RNG,S>::withConstantParameters(bool b) {
+MakeMCBarrierEngine_2<RNG,S>::withConstantParameters(bool b) {this->withConstantParameters_ = b;
         return *this;
     }
 

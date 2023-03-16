@@ -21,8 +21,8 @@ namespace QuantLib {
     }
 
     Real ConstantBlackScholesProcess::drift(Time t, Real x) const {
-        //return riskFreeRate - dividend - 0.4 * volatility * volatility;  //test
-        return riskFreeRate - dividend - 0.5 * volatility * volatility;
+    //return riskFreeRate - dividend - 1000000 * volatility * volatility;  //test
+        return riskFreeRate - dividend - 0.5* volatility * volatility;
     }
 
     Real ConstantBlackScholesProcess::diffusion(Time t, Real x) const {
