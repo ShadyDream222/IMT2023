@@ -103,7 +103,8 @@ int main() {
 
         auto startTime = std::chrono::steady_clock::now();
 
-        Real NPV = europeanOption.NPV();
+       // Real NPV = europeanOption.NPV();
+        float NPV = europeanOption.NPV();
 
         auto endTime = std::chrono::steady_clock::now();
 
@@ -118,7 +119,7 @@ int main() {
             .withSteps(timeSteps)
             .withSamples(samples)
             .withSeed(mcSeed)
-            .withConstantParameters(false)
+            .withBSPConstantParameters(false)
         );
 
         startTime = std::chrono::steady_clock::now();
@@ -138,7 +139,7 @@ int main() {
             .withSteps(timeSteps)
             .withSamples(samples)
             .withSeed(mcSeed)
-            .withConstantParameters(true)
+            .withBSPConstantParameters(true)
         );
 
         startTime = std::chrono::steady_clock::now();
