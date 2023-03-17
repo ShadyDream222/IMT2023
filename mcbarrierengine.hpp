@@ -91,59 +91,61 @@ namespace QuantLib {
                 this->mcModel_->sampleAccumulator().errorEstimate();
         }
 
+      private:
+                                  
+      bool withConstantParameters;
+                                  
       protected:
+                                  
         // McSimulation implementation
         TimeGrid timeGrid() const override;
                                   
-                                  ext::shared_ptr<path_generator_type> pathGenerator() const override {
-                                              TimeGrid grid = timeGrid();
-                                              typename RNG::rsg_type gen =
-                                                  RNG::make_sequence_generator(grid.size()-1,seed_);
+           ext::shared_ptr<path_generator_type> pathGenerator() const override {
+           TimeGrid grid = timeGrid();
+           typename RNG::rsg_type gen =
+           RNG::make_sequence_generator(grid.size()-1,seed_);
 
 
 
-                                   if (this->withConstantParameters)
-                                              {
+          if (this->withConstantParameters)
+            {
 
-                                                   Size dimensions = McSimulation<SingleVariate, RNG, S>::process_->factors();
-                                              TimeGrid grid = this->timeGrid();
-                                              typename RNG::rsg_type generator =
-                                                  RNG::make_sequence_generator(dimensions * (grid.size() - 1), McSimulation<SingleVariate, RNG, S>::seed_);
+                                            
+                TimeGrid grid = this->timeGrid();
+                                
                                               
-                                                  ext::shared_ptr<GeneralizedBlackScholesProcess> BS_process =
-                                                      ext::dynamic_pointer_cast<GeneralizedBlackScholesProcess>(this->process_);
+                ext::shared_ptr<GeneralizedBlackScholesProcess> BS_process =
+                ext::dynamic_pointer_cast<GeneralizedBlackScholesProcess>(this->process_);
 
                                                   // Get the parameters from the generalizedBSProcess class
-                                                  Time time_of_extraction = grid.back();
-                                                  double strike = ext::dynamic_pointer_cast<StrikedTypePayoff>(McSimulation<SingleVariate, RNG, S>::arguments_.payoff)->strike();
-                                                  double riskFreeRate_ = BS_process->riskFreeRate()->zeroRate(time_of_extraction, Continuous);
-                                                  double dividend_ = BS_process->dividendYield()->zeroRate(time_of_extraction, Continuous);
-                                                  double volatility_ = BS_process->blackVolatility()->blackVol(time_of_extraction, strike);
-                                                  double underlyingValue_ = BS_process->x0();
-                                                  // Instanciate a constantBSProcess with the extracted parameters
-                                                  ext::shared_ptr<ConstantBlackScholesProcess> Cst_BS_process(new ConstantBlackScholesProcess(underlyingValue_, riskFreeRate_, volatility_, dividend_));
-                                                  // Return a new path generator with constantBSProcess
-                                                  return ext::shared_ptr<path_generator_type>(
-                                                      new path_generator_type(Cst_BS_process, grid,
-                                                          generator, McSimulation<SingleVariate, RNG, S>::brownianBridge_));
-                                              }
-                                              else {
+                Time time_of_extraction = grid.back();
+                
+                double strike = ext::dynamic_pointer_cast<StrikedTypePayoff>(MCBarrierEngine_2<RNG, S>::arguments_.payoff)->strike();
+                
+                double riskFreeRate_ = BS_process->riskFreeRate()->zeroRate(time_of_extraction, Continuous);
+                
+                double dividend_ = BS_process->dividendYield()->zeroRate(time_of_extraction, Continuous);
+                
+                double volatility_ = BS_process->blackVolatility()->blackVol(time_of_extraction, strike);
+                
+                double underlyingValue_ = BS_process->x0();
+                
+                // Instanciate a constantBSProcess with the extracted parameters
+                ext::shared_ptr<ConstantBlackScholesProcess> Cst_BS_process(new ConstantBlackScholesProcess(underlyingValue_, riskFreeRate_, volatility_, dividend_));
+                
+                // Return a new path generator with constantBSProcess
+                return ext::shared_ptr<path_generator_type>(
+                    new path_generator_type(Cst_BS_process, grid, gen, MCBarrierEngine_2<RNG, S>::brownianBridge_));
+                
+            }
+               
+            else {
 
-                                                   return ext::shared_ptr<path_generator_type>(
-                                                           new path_generator_type(process_,
-                                                                                   grid, gen, brownianBridge_));
+                        return ext::shared_ptr<path_generator_type>(
+                                new path_generator_type(process_,  grid, gen, brownianBridge_));
+                 }
 
-
-
-                                              }
-
-
-
-
-                                             
-
-
-                                          }
+        }
         //ext::shared_ptr<path_generator_type> pathGenerator() const override {
         //    TimeGrid grid = timeGrid();
         //    typename RNG::rsg_type gen =
@@ -211,7 +213,7 @@ namespace QuantLib {
     : McSimulation<SingleVariate, RNG, S>(antitheticVariate, false), process_(std::move(process)),
       timeSteps_(timeSteps), timeStepsPerYear_(timeStepsPerYear), requiredSamples_(requiredSamples),
       maxSamples_(maxSamples), requiredTolerance_(requiredTolerance), isBiased_(isBiased),
-brownianBridge_(brownianBridge), seed_(seed) {  this->withConstantParameters = withConstantParameters;
+brownianBridge_(brownianBridge), seed_(seed) {this->withConstantParameters = withConstantParameters;
    // withConstantParameters_(false)
         QL_REQUIRE(timeSteps != Null<Size>() ||
                    timeStepsPerYear != Null<Size>(),
