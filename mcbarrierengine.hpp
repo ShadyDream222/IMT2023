@@ -96,28 +96,24 @@ namespace QuantLib {
       bool withConstantParameters;
                                   
       protected:
-                                  
-        // McSimulation implementation
+        // Introduction of the path generator
+        //Get the RNG
         TimeGrid timeGrid() const override;
                                   
            ext::shared_ptr<path_generator_type> pathGenerator() const override {
            TimeGrid grid = timeGrid();
-           typename RNG::rsg_type gen =
-           RNG::make_sequence_generator(grid.size()-1,seed_);
+           typename RNG::rsg_type gen = RNG::make_sequence_generator(grid.size()-1,seed_);
 
 
-
+          //Test of the boolean "WithConstantParameters" parameters
           if (this->withConstantParameters)
             {
 
-                                            
+                                    
                 TimeGrid grid = this->timeGrid();
                                 
-                                              
-                ext::shared_ptr<GeneralizedBlackScholesProcess> BS_process =
-                ext::dynamic_pointer_cast<GeneralizedBlackScholesProcess>(this->process_);
-
-                                                  // Get the parameters from the generalizedBSProcess class
+                //Get the parameters from the generalizedBSProcess class
+                ext::shared_ptr<GeneralizedBlackScholesProcess> BS_process = ext::dynamic_pointer_cast<GeneralizedBlackScholesProcess>(this->process_);
                 Time time_of_extraction = grid.back();
                 
                 double strike = ext::dynamic_pointer_cast<StrikedTypePayoff>(MCBarrierEngine_2<RNG, S>::arguments_.payoff)->strike();
@@ -130,31 +126,28 @@ namespace QuantLib {
                 
                 double underlyingValue_ = BS_process->x0();
                 
-                // Instanciate a constantBSProcess with the extracted parameters
+                
+                // Instanciate a constant Black and Scholes Process with the extracted parameters
                 ext::shared_ptr<ConstantBlackScholesProcess> Cst_BS_process(new ConstantBlackScholesProcess(underlyingValue_, riskFreeRate_, volatility_, dividend_));
                 
-                // Return a new path generator with constantBSProcess
+                // Return a new path generator with constant Black and Scholes Process using the parameters
                 return ext::shared_ptr<path_generator_type>(
                     new path_generator_type(Cst_BS_process, grid, gen, MCBarrierEngine_2<RNG, S>::brownianBridge_));
                 
             }
                
-            else {
-
-                        return ext::shared_ptr<path_generator_type>(
-                                new path_generator_type(process_,  grid, gen, brownianBridge_));
-                 }
+       else {
+                
+                // return the classical path generator
+                return ext::shared_ptr<path_generator_type>(
+                    new path_generator_type(process_,  grid, gen, brownianBridge_));
+                
+            }
 
         }
-        //ext::shared_ptr<path_generator_type> pathGenerator() const override {
-        //    TimeGrid grid = timeGrid();
-        //    typename RNG::rsg_type gen =
-        //        RNG::make_sequence_generator(grid.size()-1,seed_);
-        //    return ext::shared_ptr<path_generator_type>(
-        //                 new path_generator_type(process_,
-        //                                         grid, gen, brownianBridge_));
-       // }
+
         ext::shared_ptr<path_pricer_type> pathPricer() const override;
+                                  
         // data members
         ext::shared_ptr<GeneralizedBlackScholesProcess> process_;
         Size timeSteps_, timeStepsPerYear_;
@@ -184,6 +177,7 @@ namespace QuantLib {
         MakeMCBarrierEngine_2& withSeed(BigNatural seed);
         MakeMCBarrierEngine_2& withConstantParameters(bool b = true);
         // conversion to pricing engine
+        
         operator ext::shared_ptr<PricingEngine>() const;
       private:
         ext::shared_ptr<GeneralizedBlackScholesProcess> process_;
@@ -195,7 +189,7 @@ namespace QuantLib {
     };
 
 
-    // template definitions
+    // Template definitions
 
     template <class RNG, class S>
     inline MCBarrierEngine_2<RNG, S>::MCBarrierEngine_2(
@@ -214,7 +208,8 @@ namespace QuantLib {
       timeSteps_(timeSteps), timeStepsPerYear_(timeStepsPerYear), requiredSamples_(requiredSamples),
       maxSamples_(maxSamples), requiredTolerance_(requiredTolerance), isBiased_(isBiased),
 brownianBridge_(brownianBridge), seed_(seed) {this->withConstantParameters = withConstantParameters;
-   // withConstantParameters_(false)
+    
+ 
         QL_REQUIRE(timeSteps != Null<Size>() ||
                    timeStepsPerYear != Null<Size>(),
                    "no time steps provided");

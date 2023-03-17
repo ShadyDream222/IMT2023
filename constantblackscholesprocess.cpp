@@ -7,6 +7,7 @@
 
 namespace QuantLib {
 
+
     ConstantBlackScholesProcess::ConstantBlackScholesProcess(double underlyingValue_, double riskFreeRate_, double volatility_, double dividend_)
         :StochasticProcess1D(ext::make_shared<EulerDiscretization>())
         {
@@ -21,7 +22,7 @@ namespace QuantLib {
     }
 
     Real ConstantBlackScholesProcess::drift(Time t, Real x) const {
-    //return riskFreeRate - dividend - 1000000 * volatility * volatility;  //test
+
         return riskFreeRate - dividend - 0.5* volatility * volatility;
     }
 

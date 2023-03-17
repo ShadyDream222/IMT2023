@@ -36,7 +36,8 @@ namespace QuantLib {
     /*!  \ingroup asianengines */
     template <class RNG = PseudoRandom, class S = Statistics>
     class MCDiscreteArithmeticASEngine_2
-        : public MCDiscreteAveragingAsianEngineBase<SingleVariate,RNG,S> {
+        : public MCDiscreteAveragingAsianEngineBase<SingleVariate,RNG,S>
+    {
       public:
         typedef
         typename MCDiscreteAveragingAsianEngineBase<SingleVariate,RNG,S>::path_generator_type
@@ -45,6 +46,7 @@ namespace QuantLib {
             path_pricer_type;
         typedef typename MCDiscreteAveragingAsianEngineBase<SingleVariate,RNG,S>::stats_type
             stats_type;
+            
         // constructor
         MCDiscreteArithmeticASEngine_2(
              const ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
@@ -60,22 +62,25 @@ namespace QuantLib {
         private:
             bool withConstantParameters;
 
-            // The path generator
+            // Introduction of the path generator
+                    //Get the RNG
             ext::shared_ptr<path_generator_type> pathGenerator() const override {
 
                 Size dimensions = MCDiscreteAveragingAsianEngineBase<SingleVariate,RNG,S>::process_->factors();
                 TimeGrid grid = this->timeGrid();
-                typename RNG::rsg_type generator =
-                    RNG::make_sequence_generator(dimensions * (grid.size() - 1), MCDiscreteAveragingAsianEngineBase<SingleVariate, RNG, S>::seed_);
+                typename RNG::rsg_type generator = RNG::make_sequence_generator(dimensions * (grid.size() - 1), MCDiscreteAveragingAsianEngineBase<SingleVariate, RNG, S>::seed_);
                 
-                if (this->withConstantParameters)
+                //Test of the boolean "WithConstantParameters" parameters
+            if (this->withConstantParameters)
                 {
                     //std::cout << "test" << std::endl;
-    //std::cout << "Black Scholes Process with constant parameters" << std::endl;
-                    ext::shared_ptr<GeneralizedBlackScholesProcess> BS_process =
-                        ext::dynamic_pointer_cast<GeneralizedBlackScholesProcess>(this->process_);
+    
                     // Get the parameters from the generalizedBSProcess class
+                    ext::shared_ptr<GeneralizedBlackScholesProcess> BS_process =
+                    ext::dynamic_pointer_cast<GeneralizedBlackScholesProcess>(this->process_);
                     Time time_of_extraction = grid.back();
+                    
+                    //Get the process
                     double strike = ext::dynamic_pointer_cast<StrikedTypePayoff>(MCDiscreteAveragingAsianEngineBase<SingleVariate, RNG, S>::arguments_.payoff)->strike();
                     
                     double volatility_ = BS_process->blackVolatility()->blackVol(time_of_extraction, strike);
@@ -86,18 +91,19 @@ namespace QuantLib {
                     
                     double underlyingValue_ = BS_process->x0();
                     
-                    // Instanciate a constantBSProcess with the extracted parameters
+                    // Instanciate a constant Black and Scholes Process with the extracted parameters
                     ext::shared_ptr<ConstantBlackScholesProcess> Cst_BS_process(new ConstantBlackScholesProcess(underlyingValue_, riskFreeRate_, volatility_, dividend_));
                     
-                    // Return a new path generator with constantBSProcess
+                    // Return a new path generator with constant Black and Scholes Process using the parameters
                     return ext::shared_ptr<path_generator_type>(
                         new path_generator_type(Cst_BS_process, grid,
                           generator, MCDiscreteAveragingAsianEngineBase<SingleVariate, RNG, S>::brownianBridge_));
                     
                 }
-                else
+                
+            else
+                
                 { // return the classical path generator
-                   // std::cout << "Black Scholes Process runs as usual (parameters extracted from GeneralizedBSProcess)" << std::endl;
 
                     return ext::shared_ptr<path_generator_type>(
                         new path_generator_type(MCDiscreteAveragingAsianEngineBase<SingleVariate, RNG, S>::process_, grid,
@@ -105,7 +111,7 @@ namespace QuantLib {
                     
                 
                 }
-            }
+        }
             
             
             

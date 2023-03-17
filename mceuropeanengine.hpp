@@ -69,21 +69,27 @@ namespace QuantLib {
     private:
         bool withConstantParameters;
 
-        // The path generator
-        ext::shared_ptr<path_generator_type> pathGenerator() const override {
-
+        // Introduction of the path generator
+                //Get the RNG
+            ext::shared_ptr<path_generator_type> pathGenerator() const override {
             Size dimensions = MCVanillaEngine<SingleVariate, RNG, S>::process_->factors();
             TimeGrid grid = this->timeGrid();
+                
             typename RNG::rsg_type generator =
                 RNG::make_sequence_generator(dimensions * (grid.size() - 1), MCVanillaEngine<SingleVariate, RNG, S>::seed_);
-            //bool withConstantParameters=true;
+         
+                
+                //Test of the boolean "WithConstantParameters" parameters
             if (this ->withConstantParameters)
             {
-//std::cout << "Black Scholes Process with constant parameters" << std::endl;
+             
+                
+                //Get the parameters from the generalizedBSProcess class
                 ext::shared_ptr<GeneralizedBlackScholesProcess> BS_process =
-                    ext::dynamic_pointer_cast<GeneralizedBlackScholesProcess>(this->process_);
-                // Get the parameters from the generalizedBSProcess class
+                ext::dynamic_pointer_cast<GeneralizedBlackScholesProcess>(this->process_);
                 Time time_of_extraction = grid.back();
+                
+                //Get the process
                 double strike = ext::dynamic_pointer_cast<StrikedTypePayoff>(MCVanillaEngine<SingleVariate, RNG, S>::arguments_.payoff)->strike();
                 
                 double volatility_ = BS_process->blackVolatility()->blackVol(time_of_extraction, strike);
@@ -94,19 +100,17 @@ namespace QuantLib {
                 
                 double underlyingValue_ = BS_process->x0();
                 
-                // Instanciate a constantBSProcess with the extracted parameters
+                // Instanciate a constant Black and Scholes Process with the extracted parameters
                 ext::shared_ptr<ConstantBlackScholesProcess> Cst_BS_process(new ConstantBlackScholesProcess(underlyingValue_, riskFreeRate_, volatility_, dividend_));
                 
-                // Return a new path generator with constantBSProcess
+                // Return a new path generator with constant Black and Scholes Process using the parameters
                 return ext::shared_ptr<path_generator_type>(
                     new path_generator_type(Cst_BS_process, grid,
                       generator, MCVanillaEngine<SingleVariate, RNG, S>::brownianBridge_));
                 
             }
             else
-            { // return the classical path generator 
-               // std::cout << "Black Scholes Process runs as usual (parameters extracted from GeneralizedBSProcess)" << std::endl;
-
+            {     // return the classical path generator
                 return ext::shared_ptr<path_generator_type>(
                     new path_generator_type(MCVanillaEngine<SingleVariate, RNG, S>::process_, grid,
                         generator, MCVanillaEngine<SingleVariate, RNG, S>::brownianBridge_));
