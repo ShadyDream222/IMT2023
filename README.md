@@ -1,5 +1,5 @@
 
-QuantLib Project Report 
+$$ QuantLib Project Report $$
 
 Presentation :
 
@@ -42,30 +42,11 @@ Then we added a particular “path generator” function to implement a Black Sc
 The path generator method corresponds to the function that created the path from the process linked to the option (MCVanillaEngine example for European options). It is therefore used to model the evolution of the underlying.
 
 
-Code explanation : 
-
-
-
-![Pathgenerator](/Photo report/photo1.png)
-
-
-
-
-If the constant is True then:
-
-The following parameters of the process are retrieved: volatility, risk-free rate, dividend and value of the underlying.
+If the constant is True then the following parameters of the process are retrieved: volatility, risk-free rate, dividend and value of the underlying.
 Then we create a process instance ConstantBlackScholesProcess with these parameters and we return this instance.
 
 
-![True](/Photo report/photo2.png)
-
-
-
-If the constant is False, We go back to the usual process.
-
-
-
-![False](/Photo report/photo3.png)
+If the constant is False, we go back to the usual process.
 
 
 For Asian and Barrier options, the code is similar. The only change being the returned process type that corresponds to the class.
