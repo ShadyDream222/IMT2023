@@ -30,7 +30,7 @@
 #include <ql/processes/blackscholesprocess.hpp>
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
-
+#include "calculate_values.hpp"
 #include "constantblackscholesprocess.hpp"
 #include <iostream>
 
@@ -90,15 +90,37 @@ namespace QuantLib {
                 Time time_of_extraction = grid.back();
                 
                 //Get the process
+                
+                
+                
                 double strike = ext::dynamic_pointer_cast<StrikedTypePayoff>(MCVanillaEngine<SingleVariate, RNG, S>::arguments_.payoff)->strike();
                 
-                double volatility_ = BS_process->blackVolatility()->blackVol(time_of_extraction, strike);
+                //Use pointers to reference parameters
+                
+                double volatility_;
+                double *p_volatility = &volatility_;
+                
+                double riskFreeRate_;
+                double *p_riskFreeRate_=&riskFreeRate_;
+                
+                double dividend_;
+                double *p_dividend=&dividend_;
+                
+                double underlyingValue_;
+                double *p_underlyingValue=&underlyingValue_;
+
+                //Use calculate_values fonction to get the process
+            
+                calculate_values(BS_process, time_of_extraction, strike, p_volatility, p_riskFreeRate_, p_dividend, p_underlyingValue);
+                
+            
+           /*     double volatility_ = BS_process->blackVolatility()->blackVol(time_of_extraction, strike);
                 
                 double riskFreeRate_ = BS_process->riskFreeRate()->zeroRate(time_of_extraction, Continuous);
                 
                 double dividend_ = BS_process->dividendYield()->zeroRate(time_of_extraction, Continuous);
                 
-                double underlyingValue_ = BS_process->x0();
+                double underlyingValue_ = BS_process->x0(); */
                 
                 // Instanciate a constant Black and Scholes Process with the extracted parameters
                 ext::shared_ptr<ConstantBlackScholesProcess> Cst_BS_process(new ConstantBlackScholesProcess(underlyingValue_, riskFreeRate_, volatility_, dividend_));

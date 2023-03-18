@@ -32,6 +32,7 @@
 #include <ql/pricingengines/barrier/mcbarrierengine.hpp>
 #include <ql/processes/blackscholesprocess.hpp>
 #include <utility>
+#include "calculate_values.hpp"
 
 namespace QuantLib {
 
@@ -116,15 +117,37 @@ namespace QuantLib {
                 ext::shared_ptr<GeneralizedBlackScholesProcess> BS_process = ext::dynamic_pointer_cast<GeneralizedBlackScholesProcess>(this->process_);
                 Time time_of_extraction = grid.back();
                 
-                double strike = ext::dynamic_pointer_cast<StrikedTypePayoff>(MCBarrierEngine_2<RNG, S>::arguments_.payoff)->strike();
+                //Get process
                 
-                double riskFreeRate_ = BS_process->riskFreeRate()->zeroRate(time_of_extraction, Continuous);
+                double strike = ext::dynamic_pointer_cast<StrikedTypePayoff>(MCBarrierEngine_2<RNG, S>::arguments_.payoff)->strike();
+
+            
+                    //Use pointers to reference parameters
+                
+                double volatility_;
+                double *p_volatility = &volatility_;
+                
+                double riskFreeRate_;
+                double *p_riskFreeRate_=&riskFreeRate_;
+                
+                double dividend_;
+                double *p_dividend=&dividend_;
+                
+                double underlyingValue_;
+                double *p_underlyingValue=&underlyingValue_;
+
+                    //Use calculate_values fonction to get the process
+            
+                calculate_values(BS_process, time_of_extraction, strike, p_volatility, p_riskFreeRate_, p_dividend, p_underlyingValue);
+                
+                
+     /*           double riskFreeRate_ = BS_process->riskFreeRate()->zeroRate(time_of_extraction, Continuous);
                 
                 double dividend_ = BS_process->dividendYield()->zeroRate(time_of_extraction, Continuous);
                 
                 double volatility_ = BS_process->blackVolatility()->blackVol(time_of_extraction, strike);
-                
-                double underlyingValue_ = BS_process->x0();
+                 
+                double underlyingValue_ = BS_process->x0();   */
                 
                 
                 // Instanciate a constant Black and Scholes Process with the extracted parameters
